@@ -1,0 +1,107 @@
+/*
+ * Mage Data Chatbot Styles
+ * Add these to src/styles/global.css or import separately.
+ * These supplement the inline styles in Chatbot.astro for complex animations.
+ */
+
+/* ── Typing indicator dots ─────────────────────────────────── */
+@keyframes chatDotBounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-6px); }
+}
+
+.mage-typing-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #9CA3AF;
+  animation: chatDotBounce 1.4s ease-in-out infinite;
+}
+.mage-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.mage-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+/* ── Panel slide-in ────────────────────────────────────────── */
+@keyframes magePanelIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes magePanelOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+
+.mage-panel-enter {
+  animation: magePanelIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.mage-panel-exit {
+  animation: magePanelOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ── Bubble pulse on first appearance ──────────────────────── */
+@keyframes mageBubblePulse {
+  0% { box-shadow: 0 0 0 0 rgba(230, 116, 37, 0.5); }
+  70% { box-shadow: 0 0 0 14px rgba(230, 116, 37, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(230, 116, 37, 0); }
+}
+
+.mage-bubble-pulse {
+  animation: mageBubblePulse 2s ease-out 3;
+}
+
+/* ── Message fade in ───────────────────────────────────────── */
+@keyframes mageMsgIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mage-msg-enter {
+  animation: mageMsgIn 0.3s ease-out forwards;
+}
+
+/* ── Chip hover shimmer ────────────────────────────────────── */
+@keyframes mageChipShimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Scrollbar styling ─────────────────────────────────────── */
+.mage-messages::-webkit-scrollbar {
+  width: 5px;
+}
+.mage-messages::-webkit-scrollbar-track {
+  background: transparent;
+}
+.mage-messages::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 10px;
+}
+.mage-messages::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ── Focus visible ring ────────────────────────────────────── */
+.mage-chat-widget *:focus-visible {
+  outline: 2px solid #E67425;
+  outline-offset: 2px;
+  border-radius: 4px;
+}

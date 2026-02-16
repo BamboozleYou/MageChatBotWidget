@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mage Data — Chatbot Test Page</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Page reset & mock site styling ─────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #F0F2F4;
+      color: #1F2937;
+      line-height: 1.6;
+    }
+
+    /* ── Navbar ─────────────────────────────────────────────── */
+    .navbar {
+      background: #122045;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .navbar-brand {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .navbar-brand span { color: #E67425; }
+    .navbar-links { display: flex; gap: 24px; }
+    .navbar-links a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .navbar-links a:hover { color: #fff; }
+
+    /* ── Hero ───────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, #122045 0%, #1a3068 100%);
+      padding: 80px 32px;
+      text-align: center;
+      color: #fff;
+    }
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+    .hero h1 span { color: #E67425; }
+    .hero p {
+      font-size: 18px;
+      opacity: 0.8;
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+    .hero-btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: #E67425;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .hero-btn:hover { background: #CF6620; }
+
+    /* ── Content sections ──────────────────────────────────── */
+    .content {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 60px 32px;
+    }
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #122045;
+      margin-bottom: 12px;
+    }
+    .section-subtitle {
+      color: #6B7280;
+      font-size: 16px;
+      margin-bottom: 32px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 28px;
+      border: 1px solid #E5E7EB;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(18,32,69,0.1);
+    }
+    .card-icon {
+      width: 44px; height: 44px;
+      background: rgba(230,116,37,0.1);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .card h3 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #122045;
+      margin-bottom: 8px;
+    }
+    .card p {
+      font-size: 14px;
+      color: #6B7280;
+      line-height: 1.6;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────── */
+    .footer {
+      background: #122045;
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+      padding: 32px;
+      font-size: 13px;
+    }
+
+    /* ── Status banner ─────────────────────────────────────── */
+    .test-banner {
+      background: #FEF3C7;
+      border-bottom: 1px solid #F59E0B;
+      padding: 10px 32px;
+      font-size: 13px;
+      color: #92400E;
+      text-align: center;
+    }
+    .test-banner strong { color: #78350F; }
+    .test-banner code {
+      background: rgba(0,0,0,0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       CHATBOT WIDGET STYLES (from Chatbot.astro)
+       ══════════════════════════════════════════════════════════ */
+    .mage-chat-widget {
+      --mage-navy: #122045;
+      --mage-orange: #E67425;
+      --mage-orange-hover: #CF6620;
+      --mage-white: #FFFFFF;
+      --mage-gray-bg: #F0F2F4;
+      --mage-gray-light: #F8F9FA;
+      --mage-gray-text: #6B7280;
+      --mage-gray-border: #E5E7EB;
+      --mage-radius: 0.75rem;
+      --mage-shadow: 0 8px 32px rgba(18, 32, 69, 0.18), 0 2px 8px rgba(0,0,0,0.08);
+      --mage-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--mage-font);
+      line-height: 1.5;
+    }
+    .mage-chat-widget *, .mage-chat-widget *::before, .mage-chat-widget *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+    }
+
+    .mage-toggle {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9990;
+      width: 60px; height: 60px; border-radius: 50%; border: none;
+      background: var(--mage-orange); color: var(--mage-white); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 16px rgba(230,116,37,0.4), 0 2px 4px rgba(0,0,0,0.1);
+      transition: background 0.2s, transform 0.2s, bottom 0.3s ease;
+    }
+    .mage-toggle:hover { background: var(--mage-orange-hover); transform: scale(1.06); }
+    .mage-toggle:active { transform: scale(0.96); }
+
+    @keyframes mageBubblePulse {
+      0% { box-shadow: 0 4px 16px rgba(230,116,37,0.4), 0 0 0 0 rgba(230,116,37,0.45); }
+      70% { box-shadow: 0 4px 16px rgba(230,116,37,0.4), 0 0 0 16px rgba(230,116,37,0); }
+      100% { box-shadow: 0 4px 16px rgba(230,116,37,0.4), 0 0 0 0 rgba(230,116,37,0); }
+    }
+    .mage-bubble-pulse { animation: mageBubblePulse 2s ease-out 3; }
+
+    .mage-panel {
+      position: fixed; bottom: 96px; right: 24px; z-index: 9990;
+      width: 390px; max-height: calc(100vh - 140px);
+      border-radius: var(--mage-radius); background: var(--mage-white);
+      box-shadow: var(--mage-shadow); display: flex; flex-direction: column;
+      overflow: hidden; border: 1px solid var(--mage-gray-border);
+    }
+
+    @keyframes magePanelIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes magePanelOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to   { opacity: 0; transform: translateY(16px) scale(0.96); }
+    }
+    .mage-panel-enter { animation: magePanelIn 0.25s cubic-bezier(0.16,1,0.3,1) forwards; }
+    .mage-panel-exit  { animation: magePanelOut 0.2s cubic-bezier(0.16,1,0.3,1) forwards; }
+
+    .mage-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: var(--mage-navy); color: var(--mage-white); flex-shrink: 0;
+    }
+    .mage-header-left { display: flex; align-items: center; gap: 10px; }
+    .mage-avatar-sm {
+      width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.12);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .mage-header-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+    .mage-header-status { font-size: 11px; opacity: 0.75; display: flex; align-items: center; gap: 5px; margin-top: 1px; }
+    .mage-online-dot { width: 7px; height: 7px; border-radius: 50%; background: #34D399; display: inline-block; }
+    .mage-close-btn {
+      background: rgba(255,255,255,0.1); border: none; color: var(--mage-white);
+      cursor: pointer; padding: 6px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+    }
+    .mage-close-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .mage-messages {
+      flex: 1; overflow-y: auto; padding: 16px; background: var(--mage-gray-light);
+      display: flex; flex-direction: column; gap: 12px;
+      min-height: 280px; max-height: 420px; scroll-behavior: smooth;
+    }
+    .mage-messages::-webkit-scrollbar { width: 5px; }
+    .mage-messages::-webkit-scrollbar-track { background: transparent; }
+    .mage-messages::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 10px; }
+
+    .mage-msg { display: flex; gap: 8px; max-width: 88%; }
+    .mage-msg-bot { align-self: flex-start; }
+    .mage-msg-user { align-self: flex-end; flex-direction: row-reverse; }
+    .mage-msg-avatar {
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 13px; margin-top: 2px;
+    }
+    .mage-msg-bot .mage-msg-avatar { background: var(--mage-navy); color: var(--mage-orange); }
+    .mage-msg-user .mage-msg-avatar { background: var(--mage-orange); color: var(--mage-white); }
+
+    .mage-msg-bubble {
+      padding: 10px 14px; border-radius: var(--mage-radius);
+      font-size: 13.5px; line-height: 1.55; word-wrap: break-word; overflow-wrap: break-word;
+    }
+    .mage-msg-bot .mage-msg-bubble {
+      background: var(--mage-white); color: #1F2937;
+      border: 1px solid var(--mage-gray-border); border-bottom-left-radius: 4px;
+    }
+    .mage-msg-user .mage-msg-bubble {
+      background: var(--mage-orange); color: var(--mage-white); border-bottom-right-radius: 4px;
+    }
+    .mage-msg-bot .mage-msg-bubble a {
+      color: var(--mage-orange); text-decoration: underline; text-underline-offset: 2px; font-weight: 500;
+    }
+    .mage-msg-bot .mage-msg-bubble a:hover { color: var(--mage-orange-hover); }
+
+    @keyframes mageMsgIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .mage-msg-enter { animation: mageMsgIn 0.3s ease-out forwards; }
+
+    .mage-sources { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .mage-source-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; background: var(--mage-gray-bg);
+      border: 1px solid var(--mage-gray-border); border-radius: 100px;
+      font-size: 11px; color: var(--mage-navy); text-decoration: none;
+      transition: background 0.15s, border-color 0.15s; cursor: pointer;
+    }
+    .mage-source-pill:hover { background: #E2E5E9; border-color: #CBD5E1; }
+
+    .mage-typing { display: flex; gap: 8px; align-self: flex-start; }
+    .mage-typing-dots {
+      display: flex; gap: 4px; padding: 12px 16px;
+      background: var(--mage-white); border: 1px solid var(--mage-gray-border);
+      border-radius: var(--mage-radius); border-bottom-left-radius: 4px;
+    }
+    @keyframes chatDotBounce {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-5px); }
+    }
+    .mage-typing-dot {
+      width: 7px; height: 7px; border-radius: 50%; background-color: #9CA3AF;
+      animation: chatDotBounce 1.4s ease-in-out infinite;
+    }
+    .mage-typing-dot:nth-child(2) { animation-delay: 0.15s; }
+    .mage-typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    .mage-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .mage-chip {
+      display: inline-flex; align-items: center; padding: 7px 14px;
+      background: var(--mage-white); border: 1.5px solid var(--mage-orange);
+      border-radius: 100px; font-size: 12.5px; font-weight: 500;
+      color: var(--mage-orange); cursor: pointer;
+      transition: background 0.15s, color 0.15s, transform 0.1s;
+      font-family: var(--mage-font);
+    }
+    .mage-chip:hover { background: var(--mage-orange); color: var(--mage-white); transform: translateY(-1px); }
+
+    .mage-lead-form {
+      background: var(--mage-white); border: 1px solid var(--mage-gray-border);
+      border-radius: var(--mage-radius); padding: 16px; margin: 4px 0;
+    }
+    .mage-lead-form-title { font-size: 13px; font-weight: 600; color: var(--mage-navy); margin-bottom: 10px; }
+    .mage-lead-field {
+      width: 100%; padding: 8px 12px; border: 1px solid var(--mage-gray-border);
+      border-radius: 6px; font-size: 13px; font-family: 'Inter', sans-serif;
+      color: #1F2937; margin-bottom: 8px; transition: border-color 0.15s; background: #fff;
+    }
+    .mage-lead-field:focus { outline: none; border-color: var(--mage-orange); box-shadow: 0 0 0 3px rgba(230,116,37,0.12); }
+    .mage-lead-submit {
+      width: 100%; padding: 9px; border: none; border-radius: 6px;
+      background: var(--mage-orange); color: #fff; font-size: 13px;
+      font-weight: 600; font-family: 'Inter', sans-serif; cursor: pointer; margin-top: 2px;
+    }
+    .mage-lead-submit:hover { background: var(--mage-orange-hover); }
+
+    .mage-input-bar {
+      display: flex; align-items: center; gap: 8px; padding: 12px 14px;
+      border-top: 1px solid var(--mage-gray-border); background: #fff; flex-shrink: 0;
+    }
+    .mage-input {
+      flex: 1; padding: 9px 12px; border: 1px solid var(--mage-gray-border);
+      border-radius: 8px; font-size: 13.5px; font-family: 'Inter', sans-serif;
+      color: #1F2937; background: var(--mage-gray-light); transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .mage-input:focus { outline: none; border-color: var(--mage-orange); box-shadow: 0 0 0 3px rgba(230,116,37,0.1); background: #fff; }
+    .mage-send-btn {
+      width: 38px; height: 38px; border-radius: 8px; border: none;
+      background: var(--mage-orange); color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .mage-send-btn:hover { background: var(--mage-orange-hover); }
+    .mage-send-btn:active { transform: scale(0.94); }
+    .mage-send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .mage-footer {
+      text-align: center; padding: 7px; font-size: 10.5px; color: #9CA3AF;
+      border-top: 1px solid var(--mage-gray-border); background: #fff; flex-shrink: 0;
+    }
+    .mage-footer strong { color: var(--mage-navy); font-weight: 600; }
+
+    .mage-chat-widget *:focus-visible { outline: 2px solid var(--mage-orange); outline-offset: 2px; }
+
+    @media (max-width: 480px) {
+      .mage-panel { width: calc(100vw - 2rem); right: 1rem; bottom: 88px; max-height: 60vh; }
+      .mage-messages { min-height: 180px; max-height: none; flex: 1; }
+      .mage-toggle { width: 54px; height: 54px; }
+      .hero h1 { font-size: 28px; }
+      .hero p { font-size: 15px; }
+      .navbar-links { display: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Test status banner ────────────────────────────────── -->
+  <div class="test-banner">
+    🧪 <strong>Test Page</strong> — Chatbot is connecting to <code>http://localhost:8000/api/chat</code>
+    &nbsp;|&nbsp; Make sure your backend is running: <code>uvicorn main:app --reload --port 8000</code>
+  </div>
+
+  <!-- ── Mock Navbar ───────────────────────────────────────── -->
+  <nav class="navbar">
+    <a href="#" class="navbar-brand">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E67425" stroke-width="2.5">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+      </svg>
+      Mage <span>Data</span>
+    </a>
+    <div class="navbar-links">
+      <a href="#">Products</a>
+      <a href="#">Solutions</a>
+      <a href="#">Resources</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+    </div>
+  </nav>
+
+  <!-- ── Mock Hero ─────────────────────────────────────────── -->
+  <section class="hero">
+    <h1>Intelligent <span>Data Security</span> Platform</h1>
+    <p>Discover, classify, protect, and monitor sensitive data across your entire enterprise with Mage Data.</p>
+    <a href="#" class="hero-btn">Request a Demo</a>
+  </section>
+
+  <!-- ── Mock Content ──────────────────────────────────────── -->
+  <section class="content">
+    <h2 class="section-title">Our Products</h2>
+    <p class="section-subtitle">Comprehensive data security solutions for modern enterprises.</p>
+    <div class="cards">
+      <div class="card">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E67425" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h3>Static Data Masking</h3>
+        <p>Permanently replace sensitive data in non-production environments while maintaining referential integrity and application functionality.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E67425" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <h3>Dynamic Data Masking</h3>
+        <p>Real-time data masking that protects sensitive data at query time without modifying the underlying database.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E67425" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <h3>Sensitive Data Discovery</h3>
+        <p>Automatically scan and identify sensitive data across databases, file systems, and cloud storage.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Mock Footer ───────────────────────────────────────── -->
+  <footer class="footer">
+    © 2025 Mage Data. All rights reserved. &nbsp;|&nbsp; This is a test page for the chatbot widget.
+  </footer>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       CHATBOT WIDGET (from Chatbot.astro — vanilla JS)
+       ══════════════════════════════════════════════════════════ -->
+  <div id="mage-chat-widget" class="mage-chat-widget">
+
+    <!-- Screen reader announcer -->
+    <div id="mage-sr-announcer" aria-live="polite" aria-atomic="false"
+         style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;"></div>
+
+    <!-- Toggle Bubble -->
+    <button id="mage-toggle" type="button" aria-label="Open chat" aria-expanded="false" aria-controls="mage-panel" class="mage-toggle mage-bubble-pulse">
+      <svg id="mage-icon-chat" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <svg id="mage-icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+
+    <!-- Chat Panel -->
+    <div id="mage-panel" role="dialog" aria-label="Chat with Mage Data" aria-modal="true" class="mage-panel" style="display:none;">
+      <!-- Header -->
+      <div class="mage-header">
+        <div class="mage-header-left">
+          <div class="mage-avatar-sm">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E67425" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+          <div>
+            <div class="mage-header-title">Mage Data Assistant</div>
+            <div class="mage-header-status"><span class="mage-online-dot"></span>Online</div>
+          </div>
+        </div>
+        <button id="mage-close" type="button" aria-label="Close chat" class="mage-close-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Messages -->
+      <div id="mage-messages" class="mage-messages"></div>
+
+      <!-- Input -->
+      <div class="mage-input-bar">
+        <input id="mage-input" type="text" placeholder="Type a message..." autocomplete="off" aria-label="Type a message" class="mage-input">
+        <button id="mage-send" type="button" aria-label="Send message" class="mage-send-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Footer -->
+      <div class="mage-footer">Powered by <strong>Mage Data</strong></div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════════════════════════════════
+       CHATBOT JAVASCRIPT
+       ══════════════════════════════════════════════════════════ -->
+  <script>
+  (function() {
+    'use strict';
+
+    /* ─── CONFIG ──────────────────────────────────────────────── */
+    const CONFIG = {
+      apiEndpoint: 'http://localhost:8000/api/chat',
+      leadCapture: {
+        enabled: true,
+        triggerAfterMessages: 4,
+      },
+      ui: {
+        welcomeMessage: "Hi! I'm the Mage Data assistant. How can I help you today?",
+        quickReplies: ['Request a demo', 'Learn about products', 'Talk to sales'],
+        errorMessage: "Sorry, I'm having trouble connecting. Please try again or contact info@magedata.ai",
+      },
+    };
+
+    /* ─── STATE ───────────────────────────────────────────────── */
+    let isOpen = false, isLoading = false;
+    let messages = [], userMsgCount = 0;
+    let leadCaptured = false, leadFormShown = false, chipsVisible = true;
+    let pendingMessage = null;
+    let sessionId = crypto.randomUUID();
+
+    function $(id) { return document.getElementById(id); }
+
+    function saveState() {
+      try { sessionStorage.setItem('mage_chat_state', JSON.stringify({ messages, userMsgCount, leadCaptured, leadFormShown, chipsVisible, sessionId, isOpen })); } catch(e) {}
+    }
+
+    function restoreState() {
+      try {
+        const s = JSON.parse(sessionStorage.getItem('mage_chat_state'));
+        if (s) { messages = s.messages||[]; userMsgCount = s.userMsgCount||0; leadCaptured = s.leadCaptured||false; leadFormShown = s.leadFormShown||false; chipsVisible = s.chipsVisible!==undefined?s.chipsVisible:true; sessionId = s.sessionId||crypto.randomUUID(); isOpen = s.isOpen||false; }
+      } catch(e) {}
+    }
+
+    /* ─── RENDER HELPERS ──────────────────────────────────────── */
+    function escapeHtml(s) { const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+    function renderMd(text) {
+      let h = escapeHtml(text);
+      h = h.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+      h = h.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      h = h.replace(/\n/g, '<br>');
+      return h;
+    }
+    function botAvatar() { return '<div class="mage-msg-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>'; }
+    function userAvatar() { return '<div class="mage-msg-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'; }
+    function scrollDown() { const el=$('mage-messages'); if(el) requestAnimationFrame(()=>{el.scrollTop=el.scrollHeight;}); }
+    function announce(t) { const el=$('mage-sr-announcer'); if(el){el.textContent=''; requestAnimationFrame(()=>{el.textContent=t;});} }
+
+    /* ─── RENDER MESSAGES ─────────────────────────────────────── */
+    function renderMessages() {
+      const c=$('mage-messages'); if(!c) return; c.innerHTML='';
+
+      // Welcome
+      const w=document.createElement('div');
+      w.className='mage-msg mage-msg-bot mage-msg-enter';
+      w.innerHTML=`${botAvatar()}<div class="mage-msg-bubble">${renderMd(CONFIG.ui.welcomeMessage)}</div>`;
+      c.appendChild(w);
+
+      // Chips
+      if(chipsVisible && messages.length===0) {
+        const cd=document.createElement('div'); cd.className='mage-chips';
+        CONFIG.ui.quickReplies.forEach(t => {
+          const b=document.createElement('button'); b.type='button'; b.className='mage-chip'; b.textContent=t;
+          b.addEventListener('click', ()=>{ chipsVisible=false; sendMessage(t); });
+          cd.appendChild(b);
+        });
+        c.appendChild(cd);
+      }
+
+      // Messages
+      messages.forEach(msg => {
+        const isBot = msg.role==='assistant';
+        const d=document.createElement('div');
+        d.className=`mage-msg ${isBot?'mage-msg-bot':'mage-msg-user'} mage-msg-enter`;
+
+        let bubble = isBot ? renderMd(msg.content) : escapeHtml(msg.content);
+
+        let src='';
+        if(isBot && msg.sources && msg.sources.length) {
+          src='<div class="mage-sources">'+msg.sources.map(s=>
+            `<a href="${escapeHtml(s.url)}" class="mage-source-pill" target="_blank"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>${escapeHtml(s.title)}</a>`
+          ).join('')+'</div>';
+        }
+
+        d.innerHTML=`${isBot?botAvatar():userAvatar()}<div class="mage-msg-bubble">${bubble}${src}</div>`;
+        c.appendChild(d);
+      });
+
+      scrollDown();
+    }
+
+    /* ─── TYPING INDICATOR ────────────────────────────────────── */
+    function showTyping() {
+      hideTyping();
+      const c=$('mage-messages'); if(!c) return;
+      const d=document.createElement('div'); d.className='mage-typing mage-msg-enter'; d.id='mage-typing-indicator';
+      d.innerHTML=`${botAvatar()}<div class="mage-typing-dots"><span class="mage-typing-dot"></span><span class="mage-typing-dot"></span><span class="mage-typing-dot"></span></div>`;
+      c.appendChild(d); scrollDown();
+    }
+    function hideTyping() { const el=$('mage-typing-indicator'); if(el) el.remove(); }
+
+    /* ─── LEAD CAPTURE ────────────────────────────────────────── */
+    function shouldShowLead() { return CONFIG.leadCapture.enabled && !leadCaptured && !leadFormShown && userMsgCount>=CONFIG.leadCapture.triggerAfterMessages; }
+
+    function showLeadForm() {
+      leadFormShown=true; saveState();
+      const c=$('mage-messages'); if(!c) return;
+      const f=document.createElement('div'); f.className='mage-lead-form mage-msg-enter'; f.id='mage-lead-form';
+      f.innerHTML=`
+        <div class="mage-lead-form-title">Before we continue, may I get your details?</div>
+        <input type="text" id="mage-lead-name" class="mage-lead-field" placeholder="Name (optional)">
+        <input type="email" id="mage-lead-email" class="mage-lead-field" placeholder="Email (required)" required>
+        <input type="text" id="mage-lead-company" class="mage-lead-field" placeholder="Company (optional)">
+        <button type="button" id="mage-lead-btn" class="mage-lead-submit">Continue chatting</button>`;
+      c.appendChild(f); scrollDown();
+      // Disable input bar until lead is captured
+      const inp=$('mage-input'); if(inp){inp.disabled=true;inp.placeholder='Please fill in your details above...';}
+      $('mage-send').disabled=true;
+      setTimeout(()=>{const e=$('mage-lead-email');if(e)e.focus();},300);
+      $('mage-lead-btn').addEventListener('click', submitLead);
+      f.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();submitLead();}});
+    }
+
+    function submitLead() {
+      const email=($('mage-lead-email')||{}).value?.trim();
+      if(!email||!email.includes('@')) { const e=$('mage-lead-email'); if(e){e.style.borderColor='#EF4444';e.focus();setTimeout(()=>{e.style.borderColor='';},2000);} return; }
+      leadCaptured=true; saveState();
+      const f=$('mage-lead-form'); if(f)f.remove();
+      // Re-enable input bar
+      const inp=$('mage-input'); if(inp){inp.disabled=false;inp.placeholder='Type a message...';}
+      $('mage-send').disabled=false;
+      messages.push({role:'assistant',content:"Thanks! I've noted your details. Let me answer your question..."});
+      renderMessages(); announce("Details captured.");
+      // Send to backend
+      fetch(CONFIG.apiEndpoint.replace('/chat','/lead'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,firstname:($('mage-lead-name')||{}).value||'',company:($('mage-lead-company')||{}).value||'',sessionId})}).catch(()=>{});
+      // Auto-send the pending message that triggered the form
+      if(pendingMessage) { const msg=pendingMessage; pendingMessage=null; setTimeout(()=>{sendPendingMessage(msg);},500); }
+    }
+
+    /* Send a message that was queued while lead form was showing */
+    async function sendPendingMessage(text) {
+      isLoading=true; $('mage-send').disabled=true; showTyping();
+      try {
+        const resp=await fetch(CONFIG.apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages.map(m=>({role:m.role,content:m.content})),sessionId})});
+        hideTyping();
+        if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data=await resp.json();
+        messages.push({role:'assistant',content:data.reply||CONFIG.ui.errorMessage,sources:data.sources||[]});
+        announce('New response from Mage Data Assistant');
+      } catch(err) {
+        console.error('[MageChat]',err); hideTyping();
+        messages.push({role:'assistant',content:CONFIG.ui.errorMessage,sources:[]});
+      }
+      isLoading=false; $('mage-send').disabled=false;
+      renderMessages(); saveState();
+    }
+
+    /* ─── SEND MESSAGE ────────────────────────────────────────── */
+    async function sendMessage(text) {
+      text=text.trim(); if(!text||isLoading) return;
+      chipsVisible=false;
+      messages.push({role:'user',content:text});
+      userMsgCount++;
+      renderMessages(); saveState();
+      const inp=$('mage-input'); if(inp)inp.value='';
+
+      if(shouldShowLead()){ pendingMessage=text; showLeadForm(); return; }
+
+      isLoading=true; $('mage-send').disabled=true; showTyping();
+
+      try {
+        const resp=await fetch(CONFIG.apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages.map(m=>({role:m.role,content:m.content})),sessionId})});
+        hideTyping();
+        if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data=await resp.json();
+        messages.push({role:'assistant',content:data.reply||CONFIG.ui.errorMessage,sources:data.sources||[]});
+        announce('New response from Mage Data Assistant');
+      } catch(err) {
+        console.error('[MageChat]',err);
+        hideTyping();
+        messages.push({role:'assistant',content:CONFIG.ui.errorMessage,sources:[]});
+        announce('Error connecting');
+      }
+
+      isLoading=false; $('mage-send').disabled=false;
+      renderMessages(); saveState();
+      if(shouldShowLead()) setTimeout(showLeadForm,600);
+    }
+
+    /* ─── OPEN / CLOSE ────────────────────────────────────────── */
+    function openPanel() {
+      const p=$('mage-panel'), t=$('mage-toggle');
+      isOpen=true; p.style.display='flex'; p.classList.remove('mage-panel-exit'); p.classList.add('mage-panel-enter');
+      t.setAttribute('aria-expanded','true'); t.setAttribute('aria-label','Close chat');
+      $('mage-icon-chat').style.display='none'; $('mage-icon-close').style.display='block';
+      t.classList.remove('mage-bubble-pulse');
+      renderMessages();
+      setTimeout(()=>{$('mage-input')?.focus();},300);
+      saveState();
+    }
+
+    function closePanel() {
+      const p=$('mage-panel'), t=$('mage-toggle');
+      isOpen=false; p.classList.remove('mage-panel-enter'); p.classList.add('mage-panel-exit');
+      t.setAttribute('aria-expanded','false'); t.setAttribute('aria-label','Open chat');
+      $('mage-icon-chat').style.display='block'; $('mage-icon-close').style.display='none';
+      setTimeout(()=>{p.style.display='none';p.classList.remove('mage-panel-exit');},200);
+      t.focus(); saveState();
+    }
+
+    /* ─── KEYBOARD ────────────────────────────────────────────── */
+    document.addEventListener('keydown', e => {
+      if(e.key==='Escape'&&isOpen){e.preventDefault();closePanel();return;}
+      if(!isOpen||e.key!=='Tab') return;
+      const p=$('mage-panel'); if(!p) return;
+      const foc=p.querySelectorAll('button:not([disabled]),input:not([disabled]),a[href]');
+      if(!foc.length) return;
+      if(e.shiftKey&&document.activeElement===foc[0]){e.preventDefault();foc[foc.length-1].focus();}
+      else if(!e.shiftKey&&document.activeElement===foc[foc.length-1]){e.preventDefault();foc[0].focus();}
+    });
+
+    /* ─── INIT ────────────────────────────────────────────────── */
+    restoreState();
+    $('mage-toggle').addEventListener('click',()=>{isOpen?closePanel():openPanel();});
+    $('mage-close').addEventListener('click',closePanel);
+    $('mage-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage($('mage-input').value);}});
+    $('mage-send').addEventListener('click',()=>{sendMessage($('mage-input').value);});
+    if(isOpen) openPanel();
+  })();
+  </script>
+
+</body>
+</html>
