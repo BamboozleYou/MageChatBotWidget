@@ -167,7 +167,8 @@
     right: 24px;
     z-index: 9990;
     width: 390px;
-    max-height: calc(100vh - 140px);
+    max-height: none;
+    top: 70px;
     border-radius: var(--mage-radius);
     background: var(--mage-white);
     box-shadow: var(--mage-shadow);
@@ -250,8 +251,9 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: 280px;
-    max-height: 420px;
+    min-height: 200px;
+    max-height: none;
+    flex: 1;
     scroll-behavior: smooth;
   }
   /* Scrollbar */
@@ -445,20 +447,6 @@
     margin-top: 2px;
   }
   .mage-lead-submit:hover { background: var(--mage-orange-hover); }
-  .mage-lead-skip {
-    display: block;
-    text-align: center;
-    margin-top: 8px;
-    font-size: 11.5px;
-    color: var(--mage-gray-text);
-    cursor: pointer;
-    background: none;
-    border: none;
-    font-family: var(--mage-font);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-  .mage-lead-skip:hover { color: #374151; }
 
   /* ── Input Bar (Section 3e-3) ──────────────────────────────── */
   .mage-input-bar {
@@ -556,7 +544,7 @@
     delayMs: 5000,
     leadCapture: {
       enabled: true,
-      triggerAfterMessages: 3,
+      triggerAfterMessages: 4,
       hubspotPortalId: '',
       hubspotFormId: '',
     },
@@ -685,6 +673,14 @@
     if (el) { requestAnimationFrame(() => { el.scrollTop = el.scrollHeight; }); }
   }
 
+  function scrollToLastBot() {
+    const c = $('mage-messages');
+    if (!c) return;
+    const msgs = c.querySelectorAll('.mage-msg-bot');
+    const last = msgs[msgs.length - 1];
+    if (last) requestAnimationFrame(() => { last.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+  }
+
   function announce(text) {
     const el = $('mage-sr-announcer');
     if (el) { el.textContent = ''; requestAnimationFrame(() => { el.textContent = text; }); }
@@ -809,10 +805,15 @@
       <input type="email" id="mage-lead-email" class="mage-lead-field" placeholder="Email (required)" aria-label="Your email" required>
       <input type="text" id="mage-lead-company" class="mage-lead-field" placeholder="Company (optional)" aria-label="Your company">
       <button type="button" id="mage-lead-btn" class="mage-lead-submit">Continue chatting</button>
-      <button type="button" id="mage-lead-skip-btn" class="mage-lead-skip">Skip for now</button>
     `;
     container.appendChild(formDiv);
     scrollToBottom();
+
+    // Disable input bar until lead is captured
+    const chatInput = $('mage-input');
+    if (chatInput) { chatInput.disabled = true; chatInput.placeholder = 'Please fill in your details above...'; }
+    const sendBtn = $('mage-send');
+    if (sendBtn) sendBtn.disabled = true;
 
     // Focus the email field
     setTimeout(() => {
@@ -822,7 +823,6 @@
 
     // Submit handler
     $('mage-lead-btn').addEventListener('click', submitLeadForm);
-    $('mage-lead-skip-btn').addEventListener('click', skipLeadForm);
 
     // Enter key in fields
     formDiv.addEventListener('keydown', (e) => {
@@ -852,8 +852,14 @@
     const form = $('mage-lead-form');
     if (form) form.remove();
 
+    // Re-enable input bar
+    const chatInput = $('mage-input');
+    if (chatInput) { chatInput.disabled = false; chatInput.placeholder = 'Type a message...'; }
+    const sendBtn = $('mage-send');
+    if (sendBtn) sendBtn.disabled = false;
+
     // Add a thank you message
-    messages.push({ role: 'assistant', content: "Thanks! I've noted your details. Let's continue — how can I help?" });
+    messages.push({ role: 'assistant', content: "Thanks! I've noted your details. How can I help you?", local: true });
     renderMessages();
     announce("Thank you. Details captured.");
 
@@ -904,16 +910,9 @@
         body: JSON.stringify({ email, firstname: name, company, sessionId }),
       });
     } catch(e) { /* optional, ignore */ }
-  }
 
-  function skipLeadForm() {
-    leadCaptured = true; // don't ask again this session
-    saveState();
-    const form = $('mage-lead-form');
-    if (form) form.remove();
-    // Re-enable input
-    const input = $('mage-input');
-    if (input) input.focus();
+    const chatInput2 = $('mage-input');
+    if (chatInput2) chatInput2.focus();
   }
 
   /* ─── SEND MESSAGE ──────────────────────────────────────────── */
@@ -924,9 +923,19 @@
     // Hide chips after first message
     chipsVisible = false;
 
+    // Check lead gate BEFORE adding message — don't store the blocked message
+    userMsgCount++;
+    if (shouldShowLeadForm()) {
+      const input = $('mage-input');
+      if (input) input.value = '';
+      renderMessages();
+      saveState();
+      showLeadForm();
+      return;
+    }
+
     // Add user message
     messages.push({ role: 'user', content: text });
-    userMsgCount++;
     renderMessages();
     saveState();
 
@@ -936,12 +945,6 @@
     // Clear input
     const input = $('mage-input');
     if (input) input.value = '';
-
-    // Check if we need to show lead form
-    if (shouldShowLeadForm()) {
-      showLeadForm();
-      return;
-    }
 
     // Show typing indicator
     isLoading = true;
@@ -953,7 +956,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: messages.map(m => ({ role: m.role, content: m.content })),
+          messages: messages.filter(m => !m.local).map(m => ({ role: m.role, content: m.content })),
           sessionId: sessionId,
         }),
       });
@@ -987,6 +990,7 @@
     updateSendButton();
     renderMessages();
     saveState();
+    setTimeout(scrollToLastBot, 50);
 
     // Check again after bot response
     if (shouldShowLeadForm()) {
