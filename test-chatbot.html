@@ -202,7 +202,7 @@
 
     .mage-panel {
       position: fixed; bottom: 96px; right: 24px; z-index: 9990;
-      width: 390px; max-height: calc(100vh - 140px);
+      width: 390px; top: 70px; max-height: none;
       border-radius: var(--mage-radius); background: var(--mage-white);
       box-shadow: var(--mage-shadow); display: flex; flex-direction: column;
       overflow: hidden; border: 1px solid var(--mage-gray-border);
@@ -241,7 +241,7 @@
     .mage-messages {
       flex: 1; overflow-y: auto; padding: 16px; background: var(--mage-gray-light);
       display: flex; flex-direction: column; gap: 12px;
-      min-height: 280px; max-height: 420px; scroll-behavior: smooth;
+      min-height: 200px; max-height: none; flex: 1; scroll-behavior: smooth;
     }
     .mage-messages::-webkit-scrollbar { width: 5px; }
     .mage-messages::-webkit-scrollbar-track { background: transparent; }
@@ -527,7 +527,6 @@
     let isOpen = false, isLoading = false;
     let messages = [], userMsgCount = 0;
     let leadCaptured = false, leadFormShown = false, chipsVisible = true;
-    let pendingMessage = null;
     let sessionId = crypto.randomUUID();
 
     function $(id) { return document.getElementById(id); }
@@ -555,6 +554,12 @@
     function botAvatar() { return '<div class="mage-msg-avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>'; }
     function userAvatar() { return '<div class="mage-msg-avatar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>'; }
     function scrollDown() { const el=$('mage-messages'); if(el) requestAnimationFrame(()=>{el.scrollTop=el.scrollHeight;}); }
+    function scrollToLastBot() {
+      const c=$('mage-messages'); if(!c) return;
+      const msgs=c.querySelectorAll('.mage-msg-bot');
+      const last=msgs[msgs.length-1];
+      if(last) requestAnimationFrame(()=>{ last.scrollIntoView({behavior:'smooth',block:'start'}); });
+    }
     function announce(t) { const el=$('mage-sr-announcer'); if(el){el.textContent=''; requestAnimationFrame(()=>{el.textContent=t;});} }
 
     /* ─── RENDER MESSAGES ─────────────────────────────────────── */
@@ -640,47 +645,35 @@
       // Re-enable input bar
       const inp=$('mage-input'); if(inp){inp.disabled=false;inp.placeholder='Type a message...';}
       $('mage-send').disabled=false;
-      messages.push({role:'assistant',content:"Thanks! I've noted your details. Let me answer your question..."});
+      messages.push({role:'assistant',content:"Thanks! I've noted your details. How can I help you?",local:true});
       renderMessages(); announce("Details captured.");
       // Send to backend
       fetch(CONFIG.apiEndpoint.replace('/chat','/lead'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,firstname:($('mage-lead-name')||{}).value||'',company:($('mage-lead-company')||{}).value||'',sessionId})}).catch(()=>{});
-      // Auto-send the pending message that triggered the form
-      if(pendingMessage) { const msg=pendingMessage; pendingMessage=null; setTimeout(()=>{sendPendingMessage(msg);},500); }
-    }
-
-    /* Send a message that was queued while lead form was showing */
-    async function sendPendingMessage(text) {
-      isLoading=true; $('mage-send').disabled=true; showTyping();
-      try {
-        const resp=await fetch(CONFIG.apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages.map(m=>({role:m.role,content:m.content})),sessionId})});
-        hideTyping();
-        if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data=await resp.json();
-        messages.push({role:'assistant',content:data.reply||CONFIG.ui.errorMessage,sources:data.sources||[]});
-        announce('New response from Mage Data Assistant');
-      } catch(err) {
-        console.error('[MageChat]',err); hideTyping();
-        messages.push({role:'assistant',content:CONFIG.ui.errorMessage,sources:[]});
-      }
-      isLoading=false; $('mage-send').disabled=false;
-      renderMessages(); saveState();
+      $('mage-input')?.focus();
     }
 
     /* ─── SEND MESSAGE ────────────────────────────────────────── */
     async function sendMessage(text) {
       text=text.trim(); if(!text||isLoading) return;
       chipsVisible=false;
-      messages.push({role:'user',content:text});
+
+      // Check lead gate BEFORE adding message — don't store the blocked message
       userMsgCount++;
+      if(shouldShowLead()){ 
+        const inp=$('mage-input'); if(inp)inp.value='';
+        renderMessages(); saveState();
+        showLeadForm(); 
+        return; 
+      }
+
+      messages.push({role:'user',content:text});
       renderMessages(); saveState();
       const inp=$('mage-input'); if(inp)inp.value='';
-
-      if(shouldShowLead()){ pendingMessage=text; showLeadForm(); return; }
 
       isLoading=true; $('mage-send').disabled=true; showTyping();
 
       try {
-        const resp=await fetch(CONFIG.apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages.map(m=>({role:m.role,content:m.content})),sessionId})});
+        const resp=await fetch(CONFIG.apiEndpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages.filter(m=>!m.local).map(m=>({role:m.role,content:m.content})),sessionId})});
         hideTyping();
         if(!resp.ok) throw new Error(`HTTP ${resp.status}`);
         const data=await resp.json();
@@ -695,6 +688,7 @@
 
       isLoading=false; $('mage-send').disabled=false;
       renderMessages(); saveState();
+      setTimeout(scrollToLastBot, 50);
       if(shouldShowLead()) setTimeout(showLeadForm,600);
     }
 
